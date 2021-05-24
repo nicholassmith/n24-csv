@@ -1,11 +1,21 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/PuerkitoBio/goquery"
 )
+
+type EntryNode struct {
+	EntryNumber int    `json:"entryNumber"`
+	Class       string `json:"class"`
+	Team        string `json:"team"`
+	Car         string `json:"car"`
+}
 
 func main() {
 	url := "https://www.24h-rennen.de/en/participants-2020/"
@@ -23,8 +33,37 @@ func main() {
 		panic(err)
 	}
 
-	// fmt.Printf("%s", doc.Children().Text())
+	entryList := make(map[string][]EntryNode)
+
 	doc.Find("#content > div.container > div > div.col-md-12 > table").Children().Filter("#content > div.container > div > div.col-md-12 > table > tbody").Each(func(i int, s *goquery.Selection) {
-		fmt.Printf("node: %s", s.Contents().Text())
+		s.Children().Each(func(x int, node *goquery.Selection) {
+			entryNode := new(EntryNode)
+			node.Children().Each(func(y int, elem *goquery.Selection) {
+				switch {
+				case y == 0:
+					entry, _ := strconv.Atoi(elem.Text())
+					entryNode.EntryNumber = entry
+				case y == 2:
+					entryNode.Class = elem.Text()
+				case y == 3:
+					team := elem.Find("b").Text()
+					entryNode.Team = team
+					fmt.Printf("Team: %s\n", entryNode.Team)
+				case y == 4:
+					manufacturer := elem.Find("b").Text()
+					entryNode.Car = manufacturer
+				}
+			})
+			entryList[entryNode.Class] = append(entryList[entryNode.Class], *entryNode)
+		})
 	})
+
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.Encode(entryList)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s", &buf)
 }

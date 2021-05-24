@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func main() {
@@ -17,10 +18,13 @@ func main() {
 
 	defer resp.Body.Close()
 
-	html, err := ioutil.ReadAll(resp.Body)
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("%s\n", html)
+	// fmt.Printf("%s", doc.Children().Text())
+	doc.Find("#content > div.container > div > div.col-md-12 > table").Children().Filter("#content > div.container > div > div.col-md-12 > table > tbody").Each(func(i int, s *goquery.Selection) {
+		fmt.Printf("node: %s", s.Contents().Text())
+	})
 }

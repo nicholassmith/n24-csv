@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 type EntryNode struct {
-	EntryNumber int    `json:"entryNumber"`
-	Class       string `json:"class"`
-	Team        string `json:"team"`
-	Car         string `json:"car"`
+	EntryNumber  int    `json:"entryNumber"`
+	Class        string `json:"class"`
+	Team         string `json:"team"`
+	Manufacturer string `json:"manufacturer"`
+	Car          string `json:"car"`
 }
 
 func main() {
@@ -48,10 +50,11 @@ func main() {
 				case y == 3:
 					team := elem.Find("b").Text()
 					entryNode.Team = team
-					fmt.Printf("Team: %s\n", entryNode.Team)
 				case y == 4:
-					manufacturer := elem.Find("b").Text()
-					entryNode.Car = manufacturer
+					line, _ := elem.Html()
+					split := strings.Split(line, "<br/>")
+					entryNode.Manufacturer = split[0]
+					entryNode.Car = split[1]
 				}
 			})
 			entryList[entryNode.Class] = append(entryList[entryNode.Class], *entryNode)
@@ -62,8 +65,6 @@ func main() {
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
 	enc.Encode(entryList)
-	if err != nil {
-		panic(err)
-	}
+
 	fmt.Printf("%s", &buf)
 }

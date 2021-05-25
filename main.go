@@ -19,6 +19,13 @@ type EntryNode struct {
 	Car          string `json:"car"`
 }
 
+const (
+	entryNumberRow     = 0
+	entryClassRow      = 2
+	entryTeamRow       = 3
+	entryCarDetailsRow = 4
+)
+
 func main() {
 	url := "https://www.24h-rennen.de/en/participants-2020/"
 
@@ -42,15 +49,15 @@ func main() {
 			entryNode := new(EntryNode)
 			node.Children().Each(func(y int, elem *goquery.Selection) {
 				switch {
-				case y == 0:
+				case y == entryNumberRow:
 					entry, _ := strconv.Atoi(elem.Text())
 					entryNode.EntryNumber = entry
-				case y == 2:
+				case y == entryClassRow:
 					entryNode.Class = elem.Text()
-				case y == 3:
+				case y == entryTeamRow:
 					team := elem.Find("b").Text()
 					entryNode.Team = team
-				case y == 4:
+				case y == entryCarDetailsRow:
 					line, _ := elem.Html()
 					split := strings.Split(line, "<br/>")
 					entryNode.Manufacturer = split[0]
